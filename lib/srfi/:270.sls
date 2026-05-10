@@ -63,7 +63,7 @@
             (if (= e -1023)
                 (display "0." port)
                 (display "1." port))
-            (do ((l '() 
+            (do ((l '()
                     (let ((n (mod m #x10)))
                       (if (and (null? l) (zero? n))
                           l
