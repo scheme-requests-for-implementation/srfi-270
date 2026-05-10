@@ -89,9 +89,11 @@ td {
 
 <h2 id="abstract">Abstract</h2>
 <p>
- Floating-point numbers are generally in radix 2, but are written by
+ Floating-point numbers are stored in radix 2, but are written by
  users in radix 10. This SRFI introduces Scheme syntax for hexadecimal floating
- point constants based on C99's syntax.
+ point constants based on C99's syntax, that use radix 16 for writing
+ the integer and fractional part, and a radix 10 exponent part that raises
+ the whole value to a power of 2.
 </p>
 
 <h2 id="issues">Issues</h2>
@@ -104,14 +106,18 @@ td {
  Computers generally use binary floating point to store numbers, while
  humans like decimals. To express binary floating point exactly, one can
  use <dfn>hexadecimal floating point constants</dfn>, which are written
- in base 16 instead of base 10. They represent binary floating point
- numbers of any mantissa and exponent size precisely.
+ in base 16 instead of base 10 and whose exponential parts raise the
+ given values to a power of 2 instead of a power of 10.
+ They represent binary floating point numbers of any significand and
+ exponent size precisely.
 </p>
 
 <p>
-  Prior art: MIT Scheme supports a version of this syntax. C99 introduced
-  a hexadecimal floating point syntax that was then adopted in IEEE
-  754-2008.
+ This format is based off of C99's hexadecimal floating point constant
+ syntax.
+ MIT Scheme implements a subset of this syntax. C, Julia, and Zig
+ allow one to write floating point numbers using IEEE 754-2008's syntax
+ (which was derived from C99).
 </p>
 
 <h2 id="specification">Specification</h2>
@@ -209,12 +215,13 @@ productions:</p>
     in the same way as the R<sup>6</sup>RS.</li>
 <li>Binary, octal, and decimal numbers could read the <code>p</code>
     as a power-of-two exponent separator.</li>
+<li>Hex floats without <code>p</code>.</li>
 </ul>
 
 <h3>Procedures</h3>
 
 <p>
- The procedure <code>string->number</code> must understand hexadecimal
+ The procedure <code>string->number</code> <strong>MUST</strong> understand hexadecimal
  floats.
 </p>
 
@@ -222,7 +229,7 @@ productions:</p>
 <p>
  Write an inexact real as a floating point number. If the number is
  represented by an IEEE 754 binary floating point number, then the
- number must be represented in a certain form. If the number is a
+ number <strong>MUST</strong> be represented in a certain form. If the number is a
  real, then:
 </p>
 <ul>
