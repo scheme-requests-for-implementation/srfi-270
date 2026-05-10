@@ -1,6 +1,6 @@
 (library (srfi :270)
   (export write-hexadecimal-float)
-  (import (chezscheme))
+  (import (rnrs))
 
   (define (to-hex-digit n)
     (case n
@@ -21,6 +21,25 @@
      ((#xE) #\E)
      ((#xF) #\F)))
 
+  (define (decode-float fv)
+    (let ((bv (make-bytevector 8)))
+      (bytevector-ieee-double-set! bv 0 fv (endianness big))
+      (let ((sign? (fxbit-set? (bytevector-u8-ref bv 0) 7))
+            (exponent (fxior
+                       (fxarithmetic-shift-left
+                        (fxand (bytevector-u8-ref bv 0) #x7F)
+                        4)
+                       (fxarithmetic-shift-right
+                        (bytevector-u8-ref bv 1)
+                        4)))
+            (mantissa (do ((i 2 (fx+ i 1))
+                           (m (fxand (bytevector-u8-ref bv 1) #xF)
+                              (fxior
+                               (fxarithmetic-shift-left m 8)
+                               (bytevector-u8-ref bv i))))
+                          ((fx=? i 8) m))))
+        (values mantissa (- exponent 1023) (if sign? -1 1)))))
+
   (define write-hexadecimal-float
     (case-lambda
       ((n) (write-hexadecimal-float n (current-output-port)))
@@ -29,31 +48,31 @@
          ((nan? n) (write "+nan.0" port))
          ((equal? n +inf.0) (write "+inf.0" port))
          ((equal? n -inf.0) (write "-inf.0" port))
-         ((complex? n)
-          (write-hexadecimal-float (real-part n))
+         ((and (complex? n) (not (real? n)))
+          (write-hexadecimal-float (real-part n) port)
           (unless (negative? (imag-part n))
             (display "+" port))
-          (write-hexadecimal-float (imag-part n))
+          (write-hexadecimal-float (imag-part n) port)
           (display "i"))
          ((inexact? n)    ; Assuming flonum
-          (let* ((v (decode-float n))
-                 (m (vector-ref v 0))
-                 (e (vector-ref v 1))
-                 (s (vector-ref v 2)))
+          (let-values (((m e sign) (decode-float n)))
             (when (negative? sign)
               (display "-" port))
-            (if (= e -1023)
+            (if (<= e -1023)
                 (display "0." port)
                 (display "1." port))
-            (do ((i -1 (- i 1))
-                 (l '() (cons (to-hex-digit (mod x #xF))
-                              l))
-                 (m m (div m #xF)))
-                ((zero? m)
+            (do ((l '() 
+                    (let ((n (mod m #x10)))
+                      (if (and (null? l) (zero? n))
+                          l
+                          (cons (to-hex-digit n) l))))
+                 (i 0 (fx+ i 1))
+                 (m m (div m #x10)))
+                ((= i 52/4)
                  (display (list->string l) port)))
             (display "p" port)
             (display e port)))
-         ((exact? n) (write-hexadecimal-float (real->flonum n)))
+         ((exact? n) (write-hexadecimal-float (inexact n) port))
          (else (assertion-violation 'write-hexadecimal-float
                                     "not a number"
                                     n)))))))

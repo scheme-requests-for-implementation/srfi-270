@@ -1,7 +1,7 @@
 ;;;; SPDX-FileCopyrightText: 2026 Peter McGoron
 ;;;; SPDX-License-Identifier: MIT
 
-(import (rnrs) (chezscheme))
+(import (rnrs) (chezscheme) (srfi :270))
 (define (r s) (read (open-string-input-port s)))
 (define (test str n)
   (let ((number (r str)))
@@ -83,5 +83,13 @@
 
 (do ((i 0 (+ i 1)))
     ((= i 10000))
-  (call-with-values generate-pair test))
+  (let-values (((str num) (generate-pair)))
+    (test str num)
+    (let ((str2 (call-with-string-output-port
+                 (lambda (port)
+                   (display "#e#x" port)
+                   (write-hexadecimal-float num port)))))
+      (unless (eqv? (r str) (r str2))
+        (display `(,str != ,str2))
+        (newline)))))
 

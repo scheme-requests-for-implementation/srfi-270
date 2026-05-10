@@ -94,6 +94,11 @@ td {
  point constants based on C99's syntax.
 </p>
 
+<h2 id="issues">Issues</h2>
+<ul>
+<li>More tests for corner-cases (complex numbers).</li>
+</ul>
+
 <h2 id="rationale">Rationale</h2>
 <p>
  Computers generally use binary floating point to store numbers, while
@@ -292,7 +297,9 @@ productions:</p>
 </p>
 <p>
   The implementation of <code>write-hexadecimal-float</code> depends on a
-  procedure <code>decode-float</code>. Such a procedure can be implemented
+  procedure <code>decode-float</code>, which is implemented using
+  R<sup>6</sup>RS bytevector operations (assuming inexact reals are IEEE binary64).
+  Such a procedure can be implemented
   using <a href="https://srfi.schemers.org/srfi-144/">SRFI 144</a> flonums,
   using a procedure in the repository contributed by Sergei Egorov.
 </p>
