@@ -1,4 +1,4 @@
-; SPDX-FileCopyrightText: 2026 Peter McGoron
+; SPDX-FileCopyrightText: 2026 Sergei Egorov
 ;
 ; SPDX-License-Identifier: MIT
 
