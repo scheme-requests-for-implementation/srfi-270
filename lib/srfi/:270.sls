@@ -50,6 +50,8 @@
          ((nan? n) (write "+nan.0" port))
          ((equal? n +inf.0) (write "+inf.0" port))
          ((equal? n -inf.0) (write "-inf.0" port))
+         ((eqv? n 0.0) (write "0p0" port))
+         ((eqv? n -0.0) (write "-0p0" port))
          ((and (complex? n) (not (real? n)))
           (write-hexadecimal-float (real-part n) port)
           (unless (negative? (imag-part n))

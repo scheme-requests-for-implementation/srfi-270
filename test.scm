@@ -16,8 +16,9 @@
 (test "#e#x1.9p1+10p1i" 25/8+32i)
 (test "#x1.921fb54442d18pd+1" 3.141592653589793116)
 (test "#e#xFE.FF"  65279/256)
-(test "#x1p5@1p6" 32@64)
-(test "#e#x+3p3i" +24i)
+(test "#x1p5@1.FEEFp6" 32@130799/1024)
+(test "#e#x+3.Fp3i" +63/2i)
+(test "#e#x3.Fp3+i" 63/2+i)
 
 (define prng (make-pseudo-random-generator))
 (define (roll n)

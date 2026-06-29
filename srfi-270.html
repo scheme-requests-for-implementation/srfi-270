@@ -161,13 +161,14 @@ productions:</p>
 </dl>
 
 <p>
-  Without an exactness prefix, a hex float is read as an inexact
-  number. Like all numbers, hex floats can be read as exact numbers
-  by prefixing them with <code>#e</code>.
+  The rules for reading an inexact number are modified such that
+  <code>p</code> is considered an exponent marker. Hence, a hexadecimal
+  number with <code>.</code> in it or <code>p</code> in it is read
+  as inexact unless it was prefixed with <code>#e</code>.
 </p>
 
 <p>
-  Note that hexadecimal floats will need a <code>#x</code> in front of
+  Note that hexadecimal floats in code will need a <code>#x</code> in front of
   them, because in the formal grammar that is required to produce
   ⟨ureal 16⟩ and hence ⟨hex float body 16⟩. It is not required in
   places like <code>string-&gt;number</code>, where the radix is
@@ -175,7 +176,7 @@ productions:</p>
 </p>
 
 <p><small>
-  The exponential separator is <code>p</code> because it is ambiguous
+  The exponent marker is <code>p</code> because it is ambiguous
   whether <code>e</code> would be a decimal separator or a hex digit.
 </small></p>
 
@@ -263,14 +264,15 @@ productions:</p>
 
 <h4><code>(write-hexadecimal-float <var>z</var> [<var>port</var>])</code></h4>
 <p>
- Write an inexact complex number as a floating point number to
+ Write an inexact complex number as a hexadecimal floating point number to
  <var>port</var>, which by default is <code>(current-output-port)</code>.
  If the number is in a IEEE 754 binary floating point format, then the
  number <strong>must</strong> be represented in a certain form:
 </p>
 <ul>
- <li>For a normal number, the integer part of the output is 1.</li>
- <li>For a subnormal number (or zero), the integer part of the output is 0.</li>
+ <li>If the number is 0.0 or -0.0, it is printed with a zero exponent.</li>
+ <li>For a nonzero normal number, the integer part of the output is 1.</li>
+ <li>For a subnormal number, the integer part of the output is 0.</li>
  <li>If the number is NaN or infinity, print it as it would normally be
      printed in Scheme syntax.</li>
 </ul>
