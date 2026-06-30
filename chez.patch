@@ -53,20 +53,20 @@ index 804a01f..f452593 100644
  
 +(mknum-state binexp0 (r ex ms s wi)       ; saw binary exponent flag
 +  #f
-+  [(digit r) (binexp2 r ex ms s wi plus d)]
++  [(digit 10) (binexp2 r ex ms s wi plus d)]
 +  [(#\e #\s #\f #\d #\l) (binexp-after-explicit-exponent r ex ms s wi)]
 +  [#\+ (binexp1 r ex ms s wi plus)]
 +  [#\- (binexp1 r ex ms s wi minus)])
 +
 +(mknum-state binexp-after-explicit-exponent (r ex ms s wi)
 +  #f
-+  [(digit r) (binexp2 r ex ms s wi plus d)]
++  [(digit 10) (binexp2 r ex ms s wi plus d)]
 +  [#\+ (binexp1 r ex ms s wi plus)]
 +  [#\- (binexp1 r ex ms s wi minus)])
 +
 +(mknum-state binexp1 (r ex ms sm wi s)   ; Saw binary exponent sign
 +  #f
-+  [(digit r) (binexp2 r ex ms sm wi s d)])
++  [(digit 10) (binexp2 r ex ms sm wi s d)])
 +
 +(mknum-state binexp2 (r ex ms sm wi s e) ; saw binary exponent digit(s)
 +  (finish-number ms ex x1 (make-part/exponent (not (eq? ex 'e)) sm noround wi 2 (s e)))

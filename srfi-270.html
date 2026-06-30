@@ -92,37 +92,54 @@ td {
 <p>
  Floating-point numbers are usually stored in radix 2, but are written by
  users in radix 10. This SRFI introduces Scheme syntax for hexadecimal floating
- point constants based on C99's syntax, that use radix 16 for writing
+ point constants based on C99’s syntax. They use radix 16 for writing
  the integer and fractional part, and a radix 10 exponent part that raises
  the whole value to a power of 2.
 </p>
 
 <h2 id="issues">Issues</h2>
 <ul>
-<li>More tests for corner-cases (complex numbers).</li>
+<li>None.</li>
 </ul>
 
 <h2 id="rationale">Rationale</h2>
 <p>
- Computers generally use binary floating point to store numbers, while
- humans like decimals. To express binary floating point exactly, one can
- use <dfn>hexadecimal floating point constants</dfn>, which are written
- in base 16 instead of base 10 and whose exponential parts raise the
- given values to a power of 2 instead of a power of 10.
- They represent binary floating point numbers of any significand and
- exponent size precisely.
+ Computers generally use radix-2 (binary) to store numbers, while humans
+ use radix-10 (decimal). A terminating decimal may not be a terminating
+ binary floating point number, and vice versa. This makes entering
+ floating point constants error prone, and makes code that makes use of
+ these constants difficult to read.
 </p>
 
 <p>
- This format is based off of C99's hexadecimal floating point constant
- syntax.
- MIT Scheme implements a subset of this syntax. C, Julia, Java, and Zig
- allow one to write floating point numbers using IEEE 754-2008's syntax
- (which was derived from C99).
+ To express binary floating point exactly, one can
+ use <dfn>hexadecimal floating point constants</dfn>, which are written in
+ base 16 instead of base 10 and whose exponential parts raise the given
+ values to a power of 2 instead of a power of 10.  They precisely
+ represent binary floating point numbers of any significand and exponent
+ size.
+</p>
+
+<p>
+  Hexadecimal floating point constants are used in other languages.
+  They were popularized by C99, and were subsequently added to the 
+  IEEE 754 floating point standard in 2008. Julia, Java, and Zig implement
+  C’s hexadecimal floating point syntax.
+</p>
+
+<p>
+  This SRFI proposes hexadecimal floating point constants in a similar
+  way to C’s syntax. When a hexadecimal number is input using
+  <code>#x</code>, numbers after a decimal point will be read as fractional
+  numbers in base 16. The character <code>p</code> is an exponent, which
+  raises the number to a specified power of 2. Unlike C’s syntax, the
+  <code>p</code> is optional.
 </p>
 
 <h2 id="specification">Specification</h2>
-<p>Non-normative text is in small text.</p>
+<p>Non-normative text is in small print.</p>
+<p>Strong text is used to denote <a href="https://www.rfc-editor.org/info/rfc2119/">RFC 2119</a>
+   requirements and recommendations.</p>
 
 <h3>Syntax</h3>
 <p>
@@ -134,7 +151,7 @@ productions:</p>
 
 <dl class="productionset">
 <dt>⟨ureal <var>R</var>⟩</dt>
-<dd> ::= ⟨hex float body <var>R</var>⟩ ⟨hex float suffix⟩</dd>
+<dd> ::= … | ⟨hex float body <var>R</var>⟩ ⟨hex float suffix⟩<sup>?</sup></dd>
 <dt>⟨hex float body 16⟩</dt>
 <dd> ::= ⟨uinteger 16⟩</dd>
 <dd> | <code>.</code> ⟨digit 16⟩<sup>+</sup></dd>
@@ -144,13 +161,22 @@ productions:</p>
 </dl>
 
 <p>
-  Without an exactness prefix, a hex float is read as an inexact
-  number. Like all numbers, hex floats can be read as exact numbers
-  by prefixing them with <code>#e</code>.
+  The rules for reading an inexact number are modified such that
+  <code>p</code> is considered an exponent marker. Hence, a hexadecimal
+  number with <code>.</code> in it or <code>p</code> in it is read
+  as inexact unless it was prefixed with <code>#e</code>.
+</p>
+
+<p>
+  Note that hexadecimal floats in code will need a <code>#x</code> in front of
+  them, because in the formal grammar, <code>#x</code> is required to produce
+  ⟨ureal 16⟩ and hence ⟨hex float body 16⟩. It is not required in
+  places like <code>string-&gt;number</code>, where the radix is
+  supplied explicitly.
 </p>
 
 <p><small>
-  The exponential separator is <code>p</code> because it is ambiguous
+  The exponent marker is <code>p</code> because it is ambiguous
   whether <code>e</code> would be a decimal separator or a hex digit.
 </small></p>
 
@@ -162,7 +188,7 @@ productions:</p>
  <var>x<sub>n</sub></var
 ><var>x<sub>n&minus;1</sub></var
 >…<var>x<sub>0</sub></var
->.<var>x<sub>&minus;1</sub></var
+>&thinsp;.&thinsp;<var>x<sub>&minus;1</sub></var
 ><var>x<sub>&minus;2</sub></var
 >…<var>x<sub>&minus;m</sub></var
 >p<var>d</var>
@@ -186,14 +212,15 @@ productions:</p>
 
 <p>
  where <var>X<sub>i</sub></var> is the numerical value of the digit
- <var>x<sub>i</sub></var>.
+ <var>x<sub>i</sub></var>. If <code>p</code> is not supplied,
+ <var>d</var> is 0.
 </p>
 
 <h4>R<sup>6</sup>RS Version</h4>
 <p>On R<sup>6</sup>RS systems, the above grammar is modified to be:</p>
 <dl class="productionset">
 <dt>⟨ureal R⟩</dt>
-<dd>::= ⟨hex float body R⟩ ⟨hex float suffix⟩ ⟨mantissa width⟩</dd>
+<dd>::= … | ⟨hex float body R⟩ ⟨hex float suffix⟩<sup>?</sup> ⟨mantissa width⟩</dd>
 <dt>⟨hex float suffix⟩</dt>
 <dd> ::= ⟨hex exponent marker⟩ ⟨exponent marker⟩<sup>?</sup> ⟨sign⟩<sup>?</sup> ⟨digit 10⟩<sup>+</sup>
 </dd>
@@ -216,27 +243,36 @@ productions:</p>
     in the same way as the R<sup>6</sup>RS.</li>
 <li>Binary, octal, and decimal numbers could read the <code>p</code>
     as a power-of-two exponent separator.</li>
-<li>Hex floats without <code>p</code> are treated as if <code>p0</code>
-    were appended to them.</li>
 </ul>
 
 <h3>Procedures</h3>
 
 <p>
- The procedure <code>string->number</code> <strong>MUST</strong> understand hexadecimal
+ The procedure <code>string-&gt;number</code> <strong>must</strong> understand hexadecimal
  floats.
 </p>
 
+<p><small>
+  Some implementations extend <code>string-&gt;number</code> to 
+  allow for radices up to 36, encompassing all letters of the alphabet like
+  the C function <code>strtol</code>. This may conflict with the usage of
+  <code>p</code> as a exponent marker, but that is a general issue with
+  very high bases: what is <code>1e5</code> in base 16, and what is
+  <code>+2i</code> in base 19? This SRFI does not specify the behavior of
+  implementation-dependent extensions.
+</small></p>
+
 <h4><code>(write-hexadecimal-float <var>z</var> [<var>port</var>])</code></h4>
 <p>
- Write an inexact real as a floating point number. If the number is
- represented by an IEEE 754 binary floating point number, then the
- number <strong>MUST</strong> be represented in a certain form. If the number is a
- real, then:
+ Write an inexact complex number as a hexadecimal floating point number to
+ <var>port</var>, which by default is <code>(current-output-port)</code>.
+ If the number is in a IEEE 754 binary floating point format, then the
+ number <strong>must</strong> be represented in a certain form:
 </p>
 <ul>
- <li>For a normal number, the integer part is 1.</li>
- <li>For a subnormal number (or zero), the integer part is 0.</li>
+ <li>If the number is 0.0 or -0.0, it is printed with a zero exponent.</li>
+ <li>For a nonzero normal number, the integer part of the output is 1.</li>
+ <li>For a subnormal number, the integer part of the output is 0.</li>
  <li>If the number is NaN or infinity, print it as it would normally be
      printed in Scheme syntax.</li>
 </ul>
@@ -245,26 +281,34 @@ productions:</p>
  above rules.
 </p>
 <p>
- If an implementation implements IEEE 754 binary floating point numbers,
- then such a number written with this procedure <strong>MUST</strong> be
- read back as the same number according to <code>eqv?</code>.
+ If an implementation supports IEEE 754 binary floating point numbers,
+ then such a number written with this procedure, when read using
+ <code>read</code> on the same implementation, <strong>must</strong>
+ be the same number according to <code>eqv?</code>. On implementations
+ with multiple inexact real representations, this can be accomplished
+ using the R<sup>6</sup>RS exponent markers.
 </p>
 <p>
  If <var>z</var> cannot be represented as a finite hexadecimal float,
  then it is represented to an implementation defined precision. The
- implementation <strong>SHOULD</strong> write the closest flonum to
- <var>z</var>.
+ implementation <strong>should</strong> write the closest inexact number
+ to <var>z</var>.
 </p>
 <p>
  No prefix (such as <code>#x</code> or <code>#e</code>) is written.
 </p>
 <p>
-  An implementation should output the minimum length string that
-  satisfies these requirements.
+  An implementation <strong>should</strong> output the minimum length
+  string that satisfies these requirements.
 </p>
 
 <h2 id="examples">Examples</h2>
-<em>This section is non-normative.</em>
+<p><em>This section is non-normative.</em></p>
+<p>
+  This section assumes that the suffix <code>f</code> represents a
+  binary32 number, and <code>d</code> represents a binary64 number.
+</p>
+
 <table class="centered">
   <tr>
    <th>Expression</th>
@@ -284,6 +328,11 @@ productions:</p>
 = <sup>65279</sup>/<sub>128</sub> ≈ 509.992…</td>
   </tr>
   <tr>
+    <td><code>#xFE.FF</code></td>
+    <td>15×16<sup>1</sup> + 14 + 15×16<sup>&minus;1</sup> + 15×16<sup>&minus;2</sup> =
+        <sup>65279</sup>/<sub>256</sub> ≈ 254.996…</td>
+  </tr>
+  <tr>
    <td><code>#x-0.Ap-2</code></td>
    <td>(10×16<sup>&minus;1</sup>)×2<sup>&minus;2</sup> = &minus;<sup>5</sup>/<sub>32</sub> = &minus;.15625</td>
   </tr>
@@ -292,6 +341,18 @@ productions:</p>
    <td>(1 + 9×16<sup>&minus;1</sup>)×2<sup>1</sup> + (1×16 + 0)×2<sup>1</sup>i
        = <sup>25</sup>/<sub>8</sub> + 32i
    </td>
+  </tr>
+  <tr>
+    <td><code>#x1.921fb54442d18pd+1</code></td>
+    <td>≈ π</td>
+  </tr>
+  <tr>
+    <td><code>#x1.921fb54442d18pf+1</code></td>
+    <td>= <code>#x1.921fb6pf+1</code> ≈ π</td>
+  </tr>
+  <tr>
+    <td><code>#x1p5@1p6</code></code>
+    <td><code>32@64</code> ≈ 12.539+29.440i</td>
   </tr>
 </table>
 
